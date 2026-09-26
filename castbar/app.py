@@ -59,6 +59,8 @@ class AppDelegate(NSObject):
 
         self.pending = False
         self.casts = CastManager(self.changed)
+        # Show the popup on launch so people see where the app lives. Delay lets the status item get placed first.
+        AppHelper.callLater(0.5, self.toggle_, button)
 
     def toggle_(self, sender):
         if self.popover.isShown():

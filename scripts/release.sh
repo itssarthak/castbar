@@ -9,7 +9,9 @@ rm -rf build dist
 ZIP="dist/Castbar-$V.zip"
 ditto -c -k --keepParent dist/Castbar.app "$ZIP"
 SHA=$(shasum -a 256 "$ZIP" | cut -d' ' -f1)
-git commit -am "Release $V" || true
+git commit -qam "Release $V
+
+Co-Authored-By: Claude Opus 5.5 (1M context) <noreply@anthropic.com>" || true
 git tag "v$V" && git push && git push --tags
 gh release create "v$V" "$ZIP" --title "Castbar $V" --generate-notes
 

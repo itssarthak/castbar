@@ -10,7 +10,7 @@ setup(
             "packages": ["pychromecast", "zeroconf"],
             "plist": {
                 "CFBundleIdentifier": "com.itssarthak.castbar",
-                "CFBundleShortVersionString": "0.1.0",
+                "CFBundleShortVersionString": "0.1.1",
                 "LSUIElement": True,  # menu bar only, no Dock icon
                 "NSLocalNetworkUsageDescription": "Castbar finds and controls Cast devices on your network.",
                 "NSBonjourServices": ["_googlecast._tcp"],
