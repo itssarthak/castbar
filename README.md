@@ -1,3 +1,5 @@
+<img src="docs/logo/castbar-1024.png" width="128" alt="Castbar logo">
+
 # Castbar
 
 Control Chromecast, Google Home, Nest and other Cast speakers and TVs from your Mac's menu bar.

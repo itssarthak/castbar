@@ -8,9 +8,10 @@ setup(
     options={
         "py2app": {
             "packages": ["pychromecast", "zeroconf"],
+            "iconfile": "castbar/Castbar.icns",
             "plist": {
                 "CFBundleIdentifier": "com.itssarthak.castbar",
-                "CFBundleShortVersionString": "0.1.2",
+                "CFBundleShortVersionString": "0.1.3",
                 "LSUIElement": True,  # menu bar only, no Dock icon
                 "NSLocalNetworkUsageDescription": "Castbar finds and controls Cast devices on your network.",
                 "NSAppleEventsUsageDescription": "Castbar switches to the Chrome tab that's already playing what you clicked.",
