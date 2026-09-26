@@ -14,7 +14,7 @@ git tag "v$V" && git push && git push --tags
 gh release create "v$V" "$ZIP" --title "Castbar $V" --generate-notes
 
 TAP=$(mktemp -d)
-gh repo clone itssarthak/homebrew-tap "$TAP" -- -q
+gh repo clone itssarthak/homebrew-castbar "$TAP" -- -q
 sed -i '' "s/version \"[^\"]*\"/version \"$V\"/; s/sha256 \"[^\"]*\"/sha256 \"$SHA\"/" "$TAP/Casks/castbar.rb"
 git -C "$TAP" commit -qam "castbar $V" && git -C "$TAP" push -q
 echo "Released $V ($SHA)"
