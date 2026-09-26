@@ -4,6 +4,8 @@
 
 Control Chromecast, Google Home, Nest and other Cast speakers and TVs from your Mac's menu bar.
 
+🚀 Launching on [Product Hunt](https://www.producthunt.com/products/castbar) on 27 September 2026. Come say hi!
+
 <img src="docs/screenshot.png" width="340" alt="Castbar popup">
 
 - Now playing: artwork, title, seek bar, play/pause, ±30s, previous/next, stop
