@@ -10,6 +10,7 @@ from pychromecast.discovery import CastBrowser, SimpleCastListener
 ACTIVE = ("PLAYING", "PAUSED", "BUFFERING")
 
 
+
 class Device(CastStatusListener, MediaStatusListener):
     def __init__(self, info, zconf, on_change):
         self.info = info
@@ -37,6 +38,7 @@ class Device(CastStatusListener, MediaStatusListener):
                 "title": m.title or (s.display_name if s else "") or "Unknown",
                 "subtitle": m.artist or m.series_title or m.album_name or "",
                 "art": m.images[0].url if m.images else None,
+                "match": (m.content_id or "").split(":")[-1],  # text the browser tab's URL will contain
                 "state": m.player_state,
                 "position": m.adjusted_current_time or 0,
                 "duration": m.duration,
@@ -112,3 +114,4 @@ class CastManager:
         except Exception as e:  # device went away mid-command; the next status update corrects the UI
             print("cast command failed:", e)
         self.on_change()
+

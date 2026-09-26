@@ -1,6 +1,8 @@
 """Menu bar shell: a status item that opens a popover hosting ui/index.html."""
 import json
 import os
+import subprocess
+import threading
 
 import objc
 from AppKit import (
@@ -23,6 +25,27 @@ from WebKit import WKWebView, WKWebViewConfiguration
 from cast import CastManager
 
 WIDTH = 340
+# Bring an open Chrome tab whose URL contains argv 1 to the front. Never launches Chrome.
+FOCUS_CHROME_TAB = """
+on run argv
+    if application "Google Chrome" is not running then return "no"
+    tell application "Google Chrome"
+        repeat with w in windows
+            set i to 0
+            repeat with t in tabs of w
+                set i to i + 1
+                if URL of t contains (item 1 of argv) then
+                    set active tab index of w to i
+                    set index of w to 1
+                    activate
+                    return "yes"
+                end if
+            end repeat
+        end repeat
+    end tell
+    return "no"
+end run
+"""
 UI = os.path.join(os.path.dirname(os.path.abspath(__file__)), "ui", "index.html")
 
 
@@ -80,12 +103,26 @@ class AppDelegate(NSObject):
         self.pending = False
         self.web.evaluateJavaScript_completionHandler_(f"render({json.dumps(self.casts.state())})", None)
 
+    def focus_tab(self, match):
+        """Bring the Chrome tab playing this to the front; say so in the popup if there isn't one."""
+        found = False
+        if len(match) >= 6:
+            try:
+                out = subprocess.run(["osascript", "-e", FOCUS_CHROME_TAB, match], capture_output=True, text=True, timeout=5)
+                found = out.stdout.strip() == "yes"
+            except (OSError, subprocess.TimeoutExpired):
+                pass
+        if not found:
+            AppHelper.callAfter(self.web.evaluateJavaScript_completionHandler_, "note('Not open in Chrome')", None)
+
     def handle_(self, msg):
         cmd = msg.get("cmd")
         if cmd == "ready":
             self.push()
         elif cmd == "height":
             self.popover.setContentSize_(NSSize(WIDTH, min(640, max(120, msg["value"]))))
+        elif cmd == "focus":
+            threading.Thread(target=self.focus_tab, args=(str(msg.get("value") or ""),), daemon=True).start()
         elif cmd == "quit":
             NSApplication.sharedApplication().terminate_(None)
         else:

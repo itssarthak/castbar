@@ -72,6 +72,8 @@
   }
   .card > * { position: relative; z-index: 1; }
   .meta { display: flex; gap: 12px; align-items: center; }
+  .meta.linked { cursor: pointer; }
+  .meta.linked:hover .title { text-decoration: underline; }
   .art {
     flex: none; width: 64px; height: 64px; border-radius: 8px; overflow: hidden;
     background: var(--fill2); display: grid; place-items: center; color: var(--fg2);
@@ -84,6 +86,7 @@
   .title { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .sub, .where { color: var(--fg2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .where { font-size: 11px; margin-top: 3px; }
+  .note { font-size: 11px; color: var(--fg2); text-align: center; margin-top: 8px; }
 
   .seek { margin-top: 14px; }
   .seek input { height: 3px; }
@@ -150,6 +153,7 @@
       <div class="where" id="where"></div>
     </div>
   </div>
+  <div class="note" id="note" hidden></div>
   <div class="seek">
     <input type="range" id="seek" min="0" max="1" step="any" value="0" aria-label="Seek">
     <div class="times"><span id="cur">0:00</span><span id="dur">0:00</span></div>
@@ -205,6 +209,14 @@ let devices = [], selected = null, clock = null, seeking = false;
 const volumeHold = {}, volumeSent = {};
 const current = () => devices.find(d => d.uuid === selected);
 
+let noteTimer;
+function note(text) {
+  $('#note').textContent = text;
+  $('#note').hidden = false;
+  clearTimeout(noteTimer);
+  noteTimer = setTimeout(() => { $('#note').hidden = true; }, 2500);
+}
+
 const isPlaying = d => !!d.media && d.media.state !== 'PAUSED';
 
 // Called by Python with {devices: [...]}
@@ -241,6 +253,8 @@ function renderNow() {
   $('#subtitle').textContent = m.subtitle;
   $('#subtitle').hidden = !m.subtitle;
   $('#where').textContent = [d.name, d.app].filter(Boolean).join(' · ');
+  $('.meta').classList.toggle('linked', !!m.match);
+  $('.meta').title = m.match ? 'Switch to the Chrome tab playing this' : '';
   const art = $('#art'), img = art.querySelector('img');
   if (m.art && img.getAttribute('src') !== m.art) img.src = m.art;
   art.classList.toggle('has', !!m.art);
@@ -371,6 +385,10 @@ $('#art-ph').innerHTML = I.music;
 ['stop', 'prev', 'next', 'back', 'fwd'].forEach(id => $('#' + id).innerHTML = I[id]);
 $('#quit').onclick = () => post('quit');
 $('#toggle').onclick = togglePlay;
+$('.meta').onclick = () => {
+  const m = current()?.media;
+  if (m?.match) post('focus', selected, m.match);
+};
 $('#stop').onclick = () => current() && post('stop', selected);
 $('#prev').onclick = () => current() && post('prev', selected);
 $('#next').onclick = () => current() && post('next', selected);

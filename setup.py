@@ -10,9 +10,10 @@ setup(
             "packages": ["pychromecast", "zeroconf"],
             "plist": {
                 "CFBundleIdentifier": "com.itssarthak.castbar",
-                "CFBundleShortVersionString": "0.1.1",
+                "CFBundleShortVersionString": "0.1.2",
                 "LSUIElement": True,  # menu bar only, no Dock icon
                 "NSLocalNetworkUsageDescription": "Castbar finds and controls Cast devices on your network.",
+                "NSAppleEventsUsageDescription": "Castbar switches to the Chrome tab that's already playing what you clicked.",
                 "NSBonjourServices": ["_googlecast._tcp"],
                 "NSAppTransportSecurity": {"NSAllowsArbitraryLoadsInWebContent": True},  # album art over http
             },
