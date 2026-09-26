@@ -14,7 +14,7 @@ Control Chromecast, Google Home, Nest and other Cast speakers and TVs from your 
 ```sh
 brew tap itssarthak/castbar
 brew trust itssarthak/castbar
-brew install castbar
+brew install castbar && open -a Castbar
 ```
 
 Or download `Castbar-*.zip` from [Releases](https://github.com/itssarthak/castbar/releases), unzip, and move
