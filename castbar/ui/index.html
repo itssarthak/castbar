@@ -1,0 +1,395 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Castbar</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --fg: rgba(0, 0, 0, .86);
+    --fg2: rgba(0, 0, 0, .5);
+    --fill: rgba(0, 0, 0, .05);
+    --fill2: rgba(0, 0, 0, .09);
+    --track: rgba(0, 0, 0, .15);
+    --inv: #fff;
+    --accent: #0a84ff;
+  }
+  @supports (color: -apple-system-control-accent) { :root { --accent: -apple-system-control-accent; } }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --fg: rgba(255, 255, 255, .92);
+      --fg2: rgba(255, 255, 255, .5);
+      --fill: rgba(255, 255, 255, .06);
+      --fill2: rgba(255, 255, 255, .11);
+      --track: rgba(255, 255, 255, .2);
+      --inv: #1c1c1e;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: transparent; }
+  body {
+    font: 13px/1.3 -apple-system, BlinkMacSystemFont, sans-serif;
+    color: var(--fg);
+    padding-bottom: 8px;
+    user-select: none;
+    -webkit-user-select: none;
+    cursor: default;
+  }
+  [hidden] { display: none !important; }
+  svg { width: 18px; height: 18px; fill: currentColor; display: block; }
+
+  header { display: flex; align-items: center; justify-content: space-between; padding: 10px 10px 8px 16px; }
+  header h1 { margin: 0; font-size: 13px; font-weight: 600; }
+  .label { padding: 12px 16px 4px; font-size: 11px; font-weight: 600; color: var(--fg2); }
+
+  button.icon {
+    appearance: none; border: 0; background: none; color: var(--fg);
+    width: 32px; height: 32px; border-radius: 8px; display: grid; place-items: center; padding: 0;
+  }
+  button.icon:hover:not(:disabled) { background: var(--fill2); }
+  button.icon:active:not(:disabled) { transform: scale(.94); }
+  button.icon:disabled { opacity: .28; }
+  button.small { width: 26px; height: 26px; color: var(--fg2); }
+  button.small svg { width: 15px; height: 15px; }
+
+  input[type=range] {
+    -webkit-appearance: none; appearance: none; width: 100%; height: 4px; margin: 0; border-radius: 2px; outline: none;
+    background: linear-gradient(to right, var(--accent) var(--p, 0%), var(--track) var(--p, 0%));
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%; background: #fff;
+    box-shadow: 0 0 0 .5px rgba(0, 0, 0, .25), 0 1px 3px rgba(0, 0, 0, .3);
+    transition: transform .12s;
+  }
+  input[type=range]:disabled { opacity: .4; }
+
+  /* Now playing card */
+  .card { position: relative; margin: 0 10px; padding: 14px; border-radius: 14px; background: var(--fill); overflow: hidden; }
+  .card::before {
+    content: ""; position: absolute; inset: -40px; z-index: 0;
+    background: var(--art, none) center / cover; filter: blur(32px) saturate(1.6); opacity: .4;
+  }
+  .card > * { position: relative; z-index: 1; }
+  .meta { display: flex; gap: 12px; align-items: center; }
+  .art {
+    flex: none; width: 64px; height: 64px; border-radius: 8px; overflow: hidden;
+    background: var(--fill2); display: grid; place-items: center; color: var(--fg2);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, .15);
+  }
+  .art img { width: 100%; height: 100%; object-fit: cover; }
+  .art svg { width: 26px; height: 26px; }
+  .art:not(.has) img, .art.has svg { display: none; }
+  .text { min-width: 0; }
+  .title { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .sub, .where { color: var(--fg2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .where { font-size: 11px; margin-top: 3px; }
+
+  .seek { margin-top: 14px; }
+  .seek input { height: 3px; }
+  .seek input::-webkit-slider-thumb { transform: scale(0); }
+  .seek:hover input::-webkit-slider-thumb, .seek input:active::-webkit-slider-thumb { transform: scale(.85); }
+  .times { display: flex; justify-content: space-between; margin-top: 5px; font-size: 10px; color: var(--fg2); font-variant-numeric: tabular-nums; }
+
+  .controls { display: flex; align-items: center; justify-content: space-between; margin-top: 6px; }
+  .controls svg { width: 20px; height: 20px; }
+  #toggle { width: 42px; height: 42px; border-radius: 50%; background: var(--fg); color: var(--inv); }
+  #toggle:hover:not(:disabled) { background: var(--fg); opacity: .85; }
+  #toggle svg { width: 20px; height: 20px; }
+
+  .idle { text-align: center; color: var(--fg2); padding: 18px 14px; }
+  .idle b { display: block; color: var(--fg); font-size: 13px; margin-bottom: 2px; }
+
+  /* Devices */
+  #devices { list-style: none; margin: 0; padding: 0 6px; }
+  .dev { padding: 8px 10px; border-radius: 10px; }
+  .dev:hover { background: var(--fill); }
+  .dev.sel { background: var(--fill2); }
+  .dev-head { display: flex; align-items: center; gap: 10px; }
+  .dev-text { flex: 1; min-width: 0; }
+  .dev-name { font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .dev-status { font-size: 11px; color: var(--fg2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tag { font-size: 10px; color: var(--fg2); border: 1px solid var(--track); border-radius: 4px; padding: 0 4px; }
+  .dev-icon { flex: none; width: 28px; height: 28px; border-radius: 7px; background: var(--fill2); display: grid; place-items: center; color: var(--fg2); }
+  .dev-icon svg { width: 15px; height: 15px; }
+  .dev.playing .dev-icon { background: var(--accent); color: #fff; }
+  .eq { display: none; gap: 2px; align-items: flex-end; height: 12px; }
+  .eq i { width: 2px; background: currentColor; border-radius: 1px; animation: eq .9s ease-in-out infinite; }
+  .eq i:nth-child(2) { animation-delay: -.3s; } .eq i:nth-child(3) { animation-delay: -.6s; }
+  @keyframes eq { 0%, 100% { height: 3px; } 50% { height: 12px; } }
+  .dev.playing .eq { display: flex; } .dev.playing .dev-icon svg { display: none; }
+  .vol { display: flex; align-items: center; gap: 6px; margin: 4px 0 0 34px; }
+  .vol .pct { width: 30px; text-align: right; font-size: 11px; color: var(--fg2); font-variant-numeric: tabular-nums; }
+  .dev.muted .vol input { opacity: .45; }
+
+  .searching { text-align: center; padding: 26px 16px 18px; color: var(--fg2); }
+  .searching svg { width: 28px; height: 28px; margin: 0 auto 10px; animation: pulse 1.6s ease-in-out infinite; }
+  .searching b { display: block; color: var(--fg); margin-bottom: 3px; }
+  @keyframes pulse { 50% { opacity: .3; } }
+  @media (prefers-reduced-motion: reduce) { .eq i, .searching svg { animation: none; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>Castbar</h1>
+  <button class="icon small" id="quit" title="Quit Castbar" aria-label="Quit"></button>
+</header>
+
+<div class="searching" id="searching">
+  <span id="search-icon"></span>
+  <b>Looking for Cast devices…</b>
+  Make sure this Mac is on the same Wi-Fi.
+</div>
+
+<section class="card" id="now" hidden>
+  <div class="meta">
+    <div class="art" id="art"><img alt=""><span id="art-ph"></span></div>
+    <div class="text">
+      <div class="title" id="title"></div>
+      <div class="sub" id="subtitle"></div>
+      <div class="where" id="where"></div>
+    </div>
+  </div>
+  <div class="seek">
+    <input type="range" id="seek" min="0" max="1" step="any" value="0" aria-label="Seek">
+    <div class="times"><span id="cur">0:00</span><span id="dur">0:00</span></div>
+  </div>
+  <div class="controls">
+    <button class="icon" id="stop" title="Stop" aria-label="Stop"></button>
+    <button class="icon" id="prev" title="Previous" aria-label="Previous"></button>
+    <button class="icon" id="back" title="Back 30 seconds" aria-label="Back 30 seconds"></button>
+    <button class="icon" id="toggle" title="Play/Pause (Space)" aria-label="Play or pause"></button>
+    <button class="icon" id="fwd" title="Forward 30 seconds" aria-label="Forward 30 seconds"></button>
+    <button class="icon" id="next" title="Next" aria-label="Next"></button>
+    <span style="width:32px"></span>
+  </div>
+</section>
+
+<section class="card idle" id="idle" hidden>
+  <b id="idle-name"></b><span id="idle-app"></span>
+</section>
+
+<div class="label" id="devices-label" hidden>Devices</div>
+<ul id="devices"></ul>
+
+<script>
+const svg = (body, extra = '') => `<svg viewBox="0 0 24 24" ${extra}>${body}</svg>`;
+const stroke = 'fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"';
+const skip30 = mirror => svg(
+  `<g ${mirror ? 'transform="matrix(-1 0 0 1 24 0)"' : ''}><path d="M12 4.5a7.5 7.5 0 1 1-7.5 7.5" ${stroke}/><path d="M12.5 1.5v6L8.5 4.5z"/></g>` +
+  `<text x="12" y="15.5" font-size="7.5" font-weight="700" text-anchor="middle" font-family="-apple-system">30</text>`);
+const I = {
+  play: svg('<path d="M8 5.2v13.6a1 1 0 0 0 1.5.9l10.8-6.8a1 1 0 0 0 0-1.8L9.5 4.3A1 1 0 0 0 8 5.2z"/>'),
+  pause: svg('<rect x="6.5" y="5" width="4" height="14" rx="1"/><rect x="13.5" y="5" width="4" height="14" rx="1"/>'),
+  next: svg('<path d="M4.5 6.2v11.6a.8.8 0 0 0 1.2.7l8.8-5.8a.8.8 0 0 0 0-1.4L5.7 5.5a.8.8 0 0 0-1.2.7z"/><rect x="16" y="5.5" width="2.8" height="13" rx="1"/>'),
+  prev: svg('<path d="M19.5 6.2v11.6a.8.8 0 0 1-1.2.7l-8.8-5.8a.8.8 0 0 1 0-1.4l8.8-5.8a.8.8 0 0 1 1.2.7z"/><rect x="5.2" y="5.5" width="2.8" height="13" rx="1"/>'),
+  stop: svg('<rect x="6" y="6" width="12" height="12" rx="2"/>'),
+  back: skip30(false),
+  fwd: skip30(true),
+  speaker: svg(`<path d="M3.5 9.5h3.5l5-4v13l-5-4H3.5z"/><path d="M15.5 9a4.5 4.5 0 0 1 0 6M18 6.5a8 8 0 0 1 0 11" ${stroke}/>`),
+  muted: svg(`<path d="M3.5 9.5h3.5l5-4v13l-5-4H3.5z"/><path d="M15.5 9.5l5 5M20.5 9.5l-5 5" ${stroke}/>`),
+  quit: svg(`<path d="M12 3.5v8" ${stroke}/><path d="M6.7 6.8a7.5 7.5 0 1 0 10.6 0" ${stroke}/>`),
+  music: svg('<path d="M9 17.5V6.2l10-2.2v11.3" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="6.5" cy="17.5" r="2.5"/><circle cx="16.5" cy="15.3" r="2.5"/>'),
+};
+
+const $ = s => document.querySelector(s);
+const post = (cmd, uuid, value) => window.webkit?.messageHandlers.cast.postMessage(JSON.stringify({ cmd, uuid, value }));
+const fill = el => el.style.setProperty('--p', ((el.value - el.min) / (el.max - el.min || 1)) * 100 + '%');
+const fmt = s => {
+  s = Math.max(0, Math.floor(s || 0));
+  const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), ss = String(s % 60).padStart(2, '0');
+  return h ? `${h}:${String(m).padStart(2, '0')}:${ss}` : `${m}:${ss}`;
+};
+
+let devices = [], selected = null, clock = null, seeking = false;
+const volumeHold = {}, volumeSent = {};
+const current = () => devices.find(d => d.uuid === selected);
+
+const isPlaying = d => !!d.media && d.media.state !== 'PAUSED';
+
+// Called by Python with {devices: [...]}
+function render(state) {
+  const wasPlaying = new Set(devices.filter(isPlaying).map(d => d.uuid));
+  const wasActive = new Set(devices.filter(d => d.media).map(d => d.uuid));
+  devices = state.devices;
+  // Follow playback: jump to whatever just started; move on if the shown device stops (pausing doesn't count).
+  const started = devices.find(d => isPlaying(d) && !wasPlaying.has(d.uuid));
+  const cur = current();
+  if (started) selected = started.uuid;
+  else if (!cur || (!cur.media && wasActive.has(cur.uuid))) {
+    const pick = devices.find(isPlaying) || devices.find(d => d.media) || cur || devices[0];
+    selected = pick?.uuid ?? null;
+  }
+  renderDevices();
+  renderNow();
+}
+
+function renderNow() {
+  const d = current(), m = d?.media;
+  $('#searching').hidden = devices.length > 0;
+  $('#devices-label').hidden = devices.length === 0;
+  $('#now').hidden = !m;
+  $('#idle').hidden = !d || !!m;
+  if (!d) return;
+  if (!m) {
+    clock = null;
+    $('#idle-name').textContent = d.name;
+    $('#idle-app').textContent = d.app ? `${d.app} is open, nothing playing` : 'Nothing playing';
+    return;
+  }
+  $('#title').textContent = m.title;
+  $('#subtitle').textContent = m.subtitle;
+  $('#subtitle').hidden = !m.subtitle;
+  $('#where').textContent = [d.name, d.app].filter(Boolean).join(' · ');
+  const art = $('#art'), img = art.querySelector('img');
+  if (m.art && img.getAttribute('src') !== m.art) img.src = m.art;
+  art.classList.toggle('has', !!m.art);
+  $('#now').style.setProperty('--art', m.art ? `url("${m.art}")` : 'none');
+
+  const paused = m.state === 'PAUSED';
+  $('#toggle').innerHTML = paused ? I.play : I.pause;
+  $('#toggle').disabled = !paused && !m.can.pause;
+  $('#prev').disabled = !m.can.prev;
+  $('#next').disabled = !m.can.next;
+  $('#back').disabled = $('#fwd').disabled = $('#seek').disabled = !m.can.seek;
+  clock = { pos: m.position, dur: m.duration || 0, playing: m.state === 'PLAYING', at: performance.now() };
+  tick();
+}
+
+const position = () => !clock ? 0 :
+  Math.min(clock.dur || Infinity, clock.pos + (clock.playing ? (performance.now() - clock.at) / 1000 : 0));
+
+function tick() {
+  if (!clock || seeking) return;
+  const s = $('#seek');
+  s.max = clock.dur || 1;
+  s.value = clock.dur ? position() : 0;
+  fill(s);
+  $('#cur').textContent = fmt(position());
+  $('#dur').textContent = clock.dur ? fmt(clock.dur) : 'Live';
+}
+setInterval(tick, 500);
+
+function seekTo(t) {
+  const d = current();
+  if (!d || !clock || $('#seek').disabled) return;
+  t =Math.max(0, Math.min(clock.dur || t, t));
+  post('seek', d.uuid, t);
+  Object.assign(clock, { pos: t, at: performance.now() });
+  tick();
+}
+
+function togglePlay() {
+  const d = current(), m = d?.media;
+  if (!m || $('#toggle').disabled) return;
+  const cmd = m.state === 'PAUSED' ? 'play' : 'pause';
+  post(cmd, d.uuid);
+  m.position = position();
+  m.state = cmd === 'play' ? 'PLAYING' : 'PAUSED';
+  renderNow();
+  renderDevices();
+}
+
+function renderDevices() {
+  const list = $('#devices');
+  devices.forEach((d, i) => {
+    let li = list.querySelector(`[data-uuid="${d.uuid}"]`) || makeRow(d.uuid);
+    if (list.children[i] !== li) list.insertBefore(li, list.children[i] || null);
+    const playing = d.media?.state === 'PLAYING';
+    li.classList.toggle('sel', d.uuid === selected);
+    li.classList.toggle('playing', playing);
+    li.classList.toggle('muted', d.muted);
+    li.querySelector('.dev-name').textContent = d.name;
+    li.querySelector('.tag').hidden = !d.group;
+    li.querySelector('.dev-status').textContent =
+      d.media ? `${d.app || 'Casting'} · ${d.media.state === 'PAUSED' ? 'Paused' : 'Playing'}` : (d.app || 'Idle');
+    const mute = li.querySelector('.mute');
+    mute.innerHTML = d.muted ? I.muted : I.speaker;
+    mute.title = d.muted ? 'Unmute' : 'Mute';
+    const vol = li.querySelector('input');
+    // Don't let status echoes fight the user's finger while (or just after) they drag.
+    if (document.activeElement !== vol && !(volumeHold[d.uuid] > performance.now())) {
+      vol.value = Math.round(d.volume * 100);
+    }
+    vol.disabled = mute.disabled = d.fixed;
+    vol.setAttribute('aria-label', `${d.name} volume`);
+    fill(vol);
+    li.querySelector('.pct').textContent = vol.value + '%';
+  });
+  [...list.children].forEach(li => { if (!devices.some(d => d.uuid === li.dataset.uuid)) li.remove(); });
+}
+
+function makeRow(uuid) {
+  const li = document.createElement('li');
+  li.className = 'dev';
+  li.dataset.uuid = uuid;
+  li.innerHTML = `
+    <div class="dev-head">
+      <span class="dev-icon">${I.speaker}<span class="eq"><i></i><i></i><i></i></span></span>
+      <div class="dev-text"><div class="dev-name"></div><div class="dev-status"></div></div>
+      <span class="tag">Group</span>
+    </div>
+    <div class="vol">
+      <button class="icon small mute"></button>
+      <input type="range" min="0" max="100" step="1">
+      <span class="pct"></span>
+    </div>`;
+  li.onclick = e => {
+    if (e.target.closest('.vol')) return;
+    selected = uuid;
+    renderDevices();
+    renderNow();
+  };
+  li.querySelector('.mute').onclick = () => {
+    const d = devices.find(d => d.uuid === uuid);
+    if (!d) return;
+    d.muted = !d.muted;
+    post('mute', uuid, d.muted);
+    renderDevices();
+  };
+  const vol = li.querySelector('input');
+  vol.oninput = () => {
+    fill(vol);
+    li.querySelector('.pct').textContent = vol.value + '%';
+    volumeHold[uuid] = performance.now() + 1500;
+    if (performance.now() - (volumeSent[uuid] || 0) > 120) {
+      volumeSent[uuid] = performance.now();
+      post('volume', uuid, vol.value / 100);
+    }
+  };
+  vol.onchange = () => {
+    volumeHold[uuid] = performance.now() + 1500;
+    post('volume', uuid, vol.value / 100);
+    vol.blur();
+  };
+  return li;
+}
+
+$('#quit').innerHTML = I.quit;
+$('#search-icon').innerHTML = I.speaker;
+$('#art-ph').innerHTML = I.music;
+['stop', 'prev', 'next', 'back', 'fwd'].forEach(id => $('#' + id).innerHTML = I[id]);
+$('#quit').onclick = () => post('quit');
+$('#toggle').onclick = togglePlay;
+$('#stop').onclick = () => current() && post('stop', selected);
+$('#prev').onclick = () => current() && post('prev', selected);
+$('#next').onclick = () => current() && post('next', selected);
+$('#back').onclick = () => seekTo(position() - 30);
+$('#fwd').onclick = () => seekTo(position() + 30);
+const seek = $('#seek');
+seek.oninput = () => { seeking = true; fill(seek); $('#cur').textContent = fmt(seek.value); };
+seek.onchange = () => { seeking = false; seekTo(+seek.value); seek.blur(); };
+document.addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT') return;
+  if (e.code === 'Space') { e.preventDefault(); togglePlay(); }
+  if (e.code === 'ArrowLeft') seekTo(position() - 10);
+  if (e.code === 'ArrowRight') seekTo(position() + 10);
+});
+
+new ResizeObserver(() => post('height', null, Math.ceil(document.body.getBoundingClientRect().height)))
+  .observe(document.body);
+window.addEventListener('focus', () => document.activeElement?.blur());
+post('ready');
+</script>
+</body>
+</html>
