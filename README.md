@@ -2,16 +2,19 @@
 
 # Castbar
 
-Control Chromecast, Google Home, Nest and other Cast speakers and TVs from your Mac's menu bar.
+**Your Chromecast remote, right in your Mac menu bar.** Control every Chromecast, Google Home and Nest speaker or TV: see what's playing, pause, skip, seek and set each speaker's volume without picking up your phone.
 
 🚀 Launching on [Product Hunt](https://www.producthunt.com/products/castbar) on 27 September 2026. Come say hi!
 
-<img src="docs/screenshot.png" width="340" alt="Castbar popup">
+<img src="docs/producthunt/gallery-1.png" alt="Castbar: your Chromecast remote, right in your Mac menu bar">
 
 - Now playing: artwork, title, seek bar, play/pause, ±30s, previous/next, stop
 - Every device on your Wi-Fi with its own volume slider and mute
 - The card follows whatever is playing; the playing device sits on top
+- Click the title to jump to the Chrome tab that's casting
 - Light and dark mode, Space to play/pause, ←/→ to seek 10s
+
+<img src="docs/producthunt/gallery-2.png" width="49%"> <img src="docs/producthunt/gallery-3.png" width="49%">
 
 ## Install
 
